@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Classic Message</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg-texture: #2c2c2c;
+            --env-paper: #f4f1ea;
+            --letter-paper: #fffcf5;
+            --seal-base: #8b0000;
+            --ink-color: #2f2f2f;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--bg-texture);
+            background-image: 
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size: 3px 3px;
+            font-family: 'Playfair Display', serif;
+            overflow: hidden;
+        }
+
+        .envelope-container {
+            position: relative;
+            width: 380px;
+            height: 240px;
+            cursor: pointer;
+            perspective: 1200px;
+        }
+
+        .paper-grain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.15;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 30;
+        }
+
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--env-paper);
+            border-radius: 2px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 100px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .flap-top {
+            position: absolute;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-left: 190px solid transparent;
+            border-right: 190px solid transparent;
+            border-top: 130px solid #e8e4d9;
+            transform-origin: top;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 25;
+        }
+
+        .envelope-front {
+            position: absolute;
+            width: 0;
+            height: 0;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .flap-bottom {
+            bottom: 0;
+            border-left: 190px solid transparent;
+            border-right: 190px solid transparent;
+            border-bottom: 125px solid #f9f7f2;
+            z-index: 16;
+        }
+
+        .flap-left {
+            left: 0;
+            border-left: 190px solid #f1eee4;
+            border-top: 120px solid transparent;
+            border-bottom: 120px solid transparent;
+            z-index: 14;
+        }
+
+        .flap-right {
+            right: 0;
+            border-right: 190px solid #f1eee4;
+            border-top: 120px solid transparent;
+            border-bottom: 120px solid transparent;
+            z-index: 14;
+        }
+
+        .seal {
+            position: absolute;
+            top: 105px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--seal-base);
+            border-radius: 50%;
+            z-index: 26;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s ease;
+        }
+
+        .seal::after {
+            content: "S";
+            color: rgba(255,255,255,0.3);
+            font-size: 24px;
+        }
+
+        .letter {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            width: 92%;
+            height: 90%;
+            background: var(--letter-paper);
+            background-image: linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 100% 2rem;
+            padding: 40px 30px;
+            box-sizing: border-box;
+            z-index: 12;
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+            visibility: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .letter-inner {
+            opacity: 0;
+            transition: opacity 0.5s ease 0.5s;
+        }
+
+        .opened .flap-top { transform: rotateX(180deg); z-index: 5; }
+        .opened .seal { opacity: 0; pointer-events: none; }
+        .opened .letter {
+            visibility: visible;
+            transform: translate(-50%, -180px);
+            z-index: 40;
+            height: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .opened .letter-inner { opacity: 1; }
+
+        .instruction {
+            position: absolute;
+            bottom: -50px;
+            width: 100%;
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Audio Control Overlay (Optional UI) */
+        #music-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: #666;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="music-status">Audio: Standby</div>
+
+    <div class="envelope-container" id="mainContainer">
+        <div class="flap-top"><div class="paper-grain"></div></div>
+        <div class="seal"></div>
+        <div class="envelope">
+            <div class="paper-grain"></div>
+            <div class="envelope-front flap-bottom"></div>
+            <div class="envelope-front flap-left"></div>
+            <div class="envelope-front flap-right"></div>
+            <div class="letter">
+                <div class="paper-grain"></div>
+                <div class="letter-inner">
+                    <p>My Dear,</p>
+                    <p>I am truly sorry. It won't happen again. You mean everything to me.</p>
+                    <div style="font-family: 'Dancing Script'; font-size: 1.6rem; margin-top: 30px;">With love, Raunak</div>
+                </div>
+            </div>
+        </div>
+        <p class="instruction">Tap the seal to reveal</p>
+    </div>
+
+    <!-- Soft, melancholic piano music -->
+    <audio id="bgMusic" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/04/And-So-It-Begins-Inspired-By-Crush-Piano-Instrumental.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const container = document.getElementById('mainContainer');
+        const audio = document.getElementById('bgMusic');
+        const status = document.getElementById('music-status');
+        let musicStarted = false;
+
+        container.addEventListener('click', () => {
+            container.classList.toggle('opened');
+            
+            // Start music on first interaction (required by browsers)
+            if (!musicStarted) {
+                audio.play().then(() => {
+                    status.textContent = "Audio: Playing";
+                    musicStarted = true;
+                }).catch(err => {
+                    console.log("Audio failed to play:", err);
+                    status.textContent = "Audio: Blocked";
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
